@@ -19,13 +19,34 @@ class PhonetisaurusG2P(object):
     def execute(cls, fst_model, input, is_file=False, nbest=None):
         logger = logging.getLogger(__name__)
 
-        cmd = ['phonetisaurus-g2p',
-               '--model=%s' % fst_model,
-               '--input=%s' % input,
-               '--words']
+        # run Phonetisaurus-g2p once to find out it's args...
+        cmd = 'phonetisaurus-g2p'
 
-        if is_file:
-            cmd.append('--isfile')
+        try:
+            # FIXME: We can't just use subprocess.call and redirect stdout
+            # and stderr, because it looks like Phonetisaurus can't open
+            # an already opened file descriptor a second time. This is why
+            # we have to use this somehow hacky subprocess.Popen approach.
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+            stdoutdata, stderrdata = proc.communicate()
+        except OSError:
+            logger.error("Error occured while executing command '%s'",
+                         ' '.join(cmd), exc_info=True)
+            raise
+
+        if "--testset" in stdoutdata:
+            cmd = ['phonetisaurus-g2p',
+                   '--model=%s' % fst_model,
+                   '--testset=%s' % input]
+        else:
+            cmd = ['phonetisaurus-g2p',
+                   '--model=%s' % fst_model,
+                   '--input=%s' % input,
+                   '--words']
+            if is_file:
+                cmd.append('--isfile')
+
 
         if nbest is not None:
             cmd.extend(['--nbest=%d' % nbest])
@@ -130,6 +151,25 @@ class PhonetisaurusG2P(object):
             output = self._translate_words(words)
         self._logger.debug('G2P conversion returned phonemes for %d words',
                            len(output))
+
+        # Fix problem with "different" version of PhonetisaurusG2P:
+        word = words if type(words) is str else words[0]
+        if word not in output:
+            # Assume need to implement fix
+            new_output = {}
+            if type(words) is str:
+                new_phonemes = " ".join(st[2:] for st in output['0'].split(" "))
+                new_phonemes = "".join(new_phonemes.split(" _"))
+                new_phonemes = " ".join(new_phonemes.split("|"))
+                new_output[words] = new_phonemes
+            else:
+                for i in range(0, len(words) - 1):
+                    new_phonemes = " ".join(st[2:] for st in output[str(i)][0].split(" "))
+                    new_phonemes = "".join(new_phonemes.split(" _"))
+                    new_phonemes = " ".join(new_phonemes.split("|"))
+                    new_output[words[i]] = [new_phonemes]
+            output = new_output
+
         return output
 
 if __name__ == "__main__":

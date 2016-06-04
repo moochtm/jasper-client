@@ -176,7 +176,9 @@ class Mic:
             wav_fp.close()
             f.seek(0)
             # check if PERSONA was said
+            self._logger.debug("Starting Passive STT transcription")
             transcribed = self.passive_stt_engine.transcribe(f)
+            self._logger.debug("Finished Passive STT transcription")
 
         if any(PERSONA in phrase for phrase in transcribed):
             return (THRESHOLD, PERSONA)

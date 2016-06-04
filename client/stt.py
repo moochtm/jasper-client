@@ -122,8 +122,23 @@ class PocketSphinxSTT(AbstractSTTEngine):
                                  "hmm_dir in your profile.",
                                  hmm_dir, ', '.join(missing_hmm_files))
 
-        self._decoder = ps.Decoder(hmm=hmm_dir, logfn=self._logfile,
-                                   **vocabulary.decoder_kwargs)
+        lm_path = vocabulary.decoder_kwargs['lm']
+        dict_path = vocabulary.decoder_kwargs['dict']
+
+        self._pocketsphinx_v5 = hasattr(ps.Decoder, 'default_config')
+
+        if self._pocketsphinx_v5:
+            # Pocketsphinx v5
+            config = ps.Decoder.default_config()
+            config.set_string('-hmm', hmm_dir)
+            config.set_string('-lm', lm_path)
+            config.set_string('-dict', dict_path)
+            config.set_string('-logfn', self._logfile)
+            self._decoder = ps.Decoder(config)
+        else:
+            # Pocketsphinx v4 or sooner
+            self._decoder = ps.Decoder(
+                hmm=hmm_dir, logfn=self._logfile, lm=lm_path, dict=dict_path)
 
     def __del__(self):
         os.remove(self._logfile)
@@ -163,13 +178,19 @@ class PocketSphinxSTT(AbstractSTTEngine):
         self._decoder.process_raw(data, False, True)
         self._decoder.end_utt()
 
-        result = self._decoder.get_hyp()
+        if self._pocketsphinx_v5:
+            hyp = self._decoder.hyp()
+            result = hyp.hypstr if hyp is not None else ''
+        else:
+            result = self._decoder.get_hyp()[0]
+
+        #result = self._decoder.get_hyp()
         with open(self._logfile, 'r+') as f:
             for line in f:
                 self._logger.debug(line.strip())
             f.truncate()
 
-        transcribed = [result[0]]
+        transcribed = [result] if result != '' else []
         self._logger.info('Transcribed: %r', transcribed)
         return transcribed
 
@@ -657,5 +678,5 @@ def get_engines():
             subclasses.update(get_subclasses(subclass))
         return subclasses
     return [tts_engine for tts_engine in
-            list(get_subclasses(AbstractSTTEngine))
+            list(get_subclasses(    AbstractSTTEngine))
             if hasattr(tts_engine, 'SLUG') and tts_engine.SLUG]
