@@ -10,6 +10,11 @@ import pyaudio
 import alteration
 import jasperpath
 
+import requests
+from array import array
+import struct
+import math
+import json
 
 class Mic:
 
@@ -187,14 +192,15 @@ class Mic:
 
     def activeListen(self, THRESHOLD=None, LISTEN=True, MUSIC=False):
         """
-            Records until a second of silence or times out after 12 seconds
-
-            Returns the first matching string or None
+            Records the command and returns the transcribed speech
         """
-
-        options = self.activeListenToAllOptions(THRESHOLD, LISTEN, MUSIC)
+        if 'engine_mode' in self.active_stt_engine.get_config() and \
+            self.active_stt_engine.get_config()['engine_mode'] == 'stream':
+            options = self.activeListenToAllOptionsWithStreaming(THRESHOLD, LISTEN, MUSIC)
+        else:
+            options = self.activeListenToAllOptions(THRESHOLD, LISTEN, MUSIC)
         if options:
-            return options[0]
+            return options
 
     def activeListenToAllOptions(self, THRESHOLD=None, LISTEN=True,
                                  MUSIC=False):
@@ -203,6 +209,7 @@ class Mic:
 
             Returns a list of the matching options or None
         """
+        self._logger.info("Starting Active Listening with Streaming")
 
         RATE = 16000
         CHUNK = 1024
@@ -256,6 +263,119 @@ class Mic:
             wav_fp.close()
             f.seek(0)
             return self.active_stt_engine.transcribe(f)
+
+    def activeListenToAllOptionsWithStreaming(self, THRESHOLD=None, LISTEN=True,
+                                 MUSIC=False):
+        self._logger.info("Starting Active Listening with Streaming")
+
+        self.THRESHOLD = .01
+        self.CHUNK_SIZE = 2048
+        self.FORMAT = pyaudio.paInt16
+        self.RATE = 8000
+        self.SHORT_NORMALIZE = (1.0 / 32768.0)
+        self.access_key = 'D44WWDTJUDTXDNVOBJGWKOUNWMWA76IF'  # Your wit.ai key should go here.
+
+        p = pyaudio.PyAudio()
+
+        self.speaker.play(jasperpath.data('audio', 'beep_hi.wav'))
+        stream = p.open(format=self.FORMAT, channels=1, rate=self.RATE,
+                        input=True, output=True,
+                        frames_per_buffer=self.CHUNK_SIZE)
+
+        headers = {'Authorization': 'Bearer ' + self.access_key,
+                   'Content-Type': 'audio/raw; encoding=signed-integer; bits=16;' +
+                                   ' rate=8000; endian=little', 'Transfer-Encoding': 'chunked'}
+        url = 'https://api.wit.ai/speech'
+
+        foo = requests.post(url, headers=headers, data=self.gen(p, stream))
+        self.speaker.play(jasperpath.data('audio', 'beep_lo.wav'))
+
+        stream.stop_stream()
+        stream.close()
+        p.terminate()
+
+        result = json.loads(foo.text)
+
+        if '_text' in result:
+            return [result['_text']]
+
+        return None
+
+    # Returns if the RMS of block is less than the threshold
+    def is_silent(self, block):
+        count = len(block) / 2
+        form = "%dh" % (count)
+        shorts = struct.unpack(form, block)
+        sum_squares = 0.0
+
+        for sample in shorts:
+            n = sample * self.SHORT_NORMALIZE
+            sum_squares += n * n
+
+        rms_value = math.sqrt(sum_squares / count)
+        return rms_value, rms_value <= self.THRESHOLD
+
+    # Returns as many (up to returnNum) blocks as it can.
+    def returnUpTo(self, iterator, values, returnNum):
+        if iterator + returnNum < len(values):
+            return (iterator + returnNum,
+                    "".join(values[iterator:iterator + returnNum]))
+
+        else:
+            temp = len(values) - iterator
+            return (iterator + temp + 1, "".join(values[iterator:iterator + temp]))
+
+    # Python generator- yields roughly 512k to generator.
+    def gen(self, p, stream):
+        num_silent = 0
+        snd_started = False
+        start_pack = 0
+        counter = 0
+        print "Microphone on!"
+        i = 0
+        data = []
+
+        while 1:
+            rms_data = stream.read(self.CHUNK_SIZE)
+            snd_data = array('i', rms_data)
+            for d in snd_data:
+                data.append(struct.pack('<i', d))
+
+            rms, silent = self.is_silent(rms_data)
+
+            if silent and snd_started:
+                num_silent += 1
+                print "NUM_SILENT: %s" % str(num_silent)
+
+            elif not silent and not snd_started:
+                i = len(data) - self.CHUNK_SIZE * 2  # Set the counter back a few seconds
+                if i < 0:  # so we can hear the start of speech.
+                    i = 0
+                snd_started = True
+                print "TRIGGER at " + str(rms) + " rms."
+
+            elif not silent and snd_started and not i >= len(data):
+                i, temp = self.returnUpTo(i, data, 1024)
+                yield temp
+                num_silent = 0
+
+            if snd_started and num_silent > 1:
+                print "Stop Trigger"
+                break
+
+            if counter > 75:  # Slightly less than 10 seconds.
+                print "Timeout, Stop Trigger"
+                break
+
+            if snd_started:
+                counter = counter + 1
+
+        # Yield the rest of the data.
+        print "Pre-streamed " + str(i) + " of " + str(len(data)) + "."
+        while (i < len(data)):
+            i, temp = self.returnUpTo(i, data, 512)
+            yield temp
+        print "Swapping to thinking."
 
     def say(self, phrase,
             OPTIONS=" -vdefault+m3 -p 40 -s 160 --stdout > say.wav"):

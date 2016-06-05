@@ -572,9 +572,10 @@ class WitAiSTT(AbstractSTTEngine):
 
     SLUG = "witai"
 
-    def __init__(self, access_token):
+    def __init__(self, access_token, engine_mode=None):
         self._logger = logging.getLogger(__name__)
         self.token = access_token
+        self.engine_mode = engine_mode
 
     @classmethod
     def get_config(cls):
@@ -589,6 +590,8 @@ class WitAiSTT(AbstractSTTEngine):
                     if 'access_token' in profile['witai-stt']:
                         config['access_token'] = \
                             profile['witai-stt']['access_token']
+                    if 'engine_mode' in profile['witai-stt']:
+                        config['engine_mode'] = profile['witai-stt']['engine_mode']
         return config
 
     @property
@@ -598,6 +601,7 @@ class WitAiSTT(AbstractSTTEngine):
     @token.setter
     def token(self, value):
         self._token = value
+
         self._headers = {'Authorization': 'Bearer %s' % self.token,
                          'accept': 'application/json',
                          'Content-Type': 'audio/wav'}
