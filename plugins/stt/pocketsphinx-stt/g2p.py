@@ -18,13 +18,38 @@ RE_ISYMNOTFOUND = re.compile(r'^Symbol: \'(?P<symbol>.+)\' not found in ' +
 def execute(executable, fst_model, input, is_file=False, nbest=None):
     logger = logging.getLogger(__name__)
 
-    cmd = [executable,
-           '--model=%s' % fst_model,
-           '--input=%s' % input,
-           '--words']
+    #####################################################################
+    # MOOCHTM
 
-    if is_file:
-        cmd.append('--isfile')
+    cmd = executable
+
+    try:
+        # FIXME: We can't just use subprocess.call and redirect stdout
+        # and stderr, because it looks like Phonetisaurus can't open
+        # an already opened file descriptor a second time. This is why
+        # we have to use this somehow hacky subprocess.Popen approach.
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
+        stdoutdata, stderrdata = proc.communicate()
+    except OSError:
+        logger.error("Error occured while executing command '%s'",
+                     ' '.join(cmd), exc_info=True)
+        raise
+
+    if "--testset" in stdoutdata:
+        cmd = ['phonetisaurus-g2p',
+               '--model=%s' % fst_model,
+               '--testset=%s' % input]
+    else:
+        cmd = ['phonetisaurus-g2p',
+               '--model=%s' % fst_model,
+               '--input=%s' % input,
+               '--words']
+        if is_file:
+            cmd.append('--isfile')
+
+
+    #####################################################################
 
     if nbest is not None:
         cmd.extend(['--nbest=%d' % nbest])

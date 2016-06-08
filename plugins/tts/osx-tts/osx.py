@@ -30,8 +30,9 @@ class MacOSXTTSPlugin(plugin.TTSPlugin):
         with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as f:
             fname = f.name
         cmd = [EXECUTABLE, '-o', fname,
-                           '--file-format=WAVE',
-                           str(phrase)]
+                            '--file-format=WAVE',
+                            '--data-format=LEI16@16000',
+                            str(phrase)]
         self._logger.debug('Executing %s', ' '.join([pipes.quote(arg)
                                                      for arg in cmd]))
         with tempfile.SpooledTemporaryFile() as f:
