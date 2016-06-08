@@ -287,7 +287,7 @@ class Mic:
         #if THRESHOLD is None:
         #self.THRESHOLD = self.fetchThreshold()
 
-        self.CHUNK_SIZE = 2048
+        self.CHUNK_SIZE = 8192
         self.FORMAT = pyaudio.paInt16
         self.RATE = 8000
         self.SHORT_NORMALIZE = (1.0 / 32768.0)
