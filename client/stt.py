@@ -574,8 +574,39 @@ class WitAiSTT(AbstractSTTEngine):
 
     def __init__(self, access_token, engine_mode=None):
         self._logger = logging.getLogger(__name__)
-        self.token = access_token
-        self.engine_mode = engine_mode
+
+        self._url = 'https://api.wit.ai/speech?v=20150101'
+
+        # Try to get wit.ai Auth token from config
+        profile_path = jasperpath.config('profile.yml')
+        if os.path.exists(profile_path):
+            with open(profile_path, 'r') as f:
+                profile = yaml.safe_load(f)
+                if 'witai-stt' in profile:
+                    if 'access_token' in profile['witai-stt']:
+                        self._token = profile['witai-stt']['access_token']
+                    else:
+                        self._logger.error("Wit-Ai STT engine needs 'access_token' in profile")
+                        return None
+                    self.engine_mode = 'file'
+                    if 'engine_mode' in profile['witai-stt']:
+                        self.engine_mode = profile['witai-stt']['engine_mode']
+                else:
+                    self._logger.error("Wit-Ai STT engine needs 'wit-ai stt' section in profile")
+                    return None
+
+                if self.engine_mode == 'file':
+                    self._headers = {
+                        'Authorization': 'Bearer ' + self.token,
+                        'accept': 'application/json',
+                        'Content-Type': 'audio/wav'
+                    }
+                else:
+                    self._headers = {
+                        'Authorization': 'Bearer ' + self._token,
+                        'Content-Type': 'audio/raw; encoding=signed-integer; bits=16;' +
+                        ' rate=8000; endian=little',
+                        'Transfer-Encoding': 'chunked'}
 
     @classmethod
     def get_config(cls):
@@ -609,6 +640,10 @@ class WitAiSTT(AbstractSTTEngine):
     @property
     def headers(self):
         return self._headers
+
+    @property
+    def url(self):
+        return self._url
 
     def transcribe(self, fp):
         data = fp.read()

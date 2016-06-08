@@ -91,6 +91,7 @@ class Mic:
 
         return THRESHOLD
 
+    # TODO: Mic shouldn't be processing audio - should be Conversation that has "passiveListen"
     def passiveListen(self, PERSONA):
         """
         Listens for PERSONA in everyday sound. Times out after LISTEN_TIME, so
@@ -190,6 +191,7 @@ class Mic:
 
         return (False, transcribed)
 
+    # TODO: Mic shouldn't be processing audio - should be Conversation that has "activeListen"
     def activeListen(self, THRESHOLD=None, LISTEN=True, MUSIC=False):
         """
             Records the command and returns the transcribed speech
@@ -202,6 +204,7 @@ class Mic:
         if options:
             return options
 
+    # TODO: Mic shouldn't be processing audio - should be Conversation that has "activeListen"
     def activeListenToAllOptions(self, THRESHOLD=None, LISTEN=True,
                                  MUSIC=False):
         """
@@ -264,11 +267,26 @@ class Mic:
             f.seek(0)
             return self.active_stt_engine.transcribe(f)
 
+    # TODO: Mic shouldn't be processing audio - should be Conversation that has "activeListen"
     def activeListenToAllOptionsWithStreaming(self, THRESHOLD=None, LISTEN=True,
                                  MUSIC=False):
+        """
+
+        Args:
+            THRESHOLD:
+            LISTEN:
+            MUSIC:
+
+        Returns:
+
+        """
         self._logger.info("Starting Active Listening with Streaming")
 
+        print THRESHOLD
         self.THRESHOLD = .01
+        #if THRESHOLD is None:
+        #self.THRESHOLD = self.fetchThreshold()
+
         self.CHUNK_SIZE = 2048
         self.FORMAT = pyaudio.paInt16
         self.RATE = 8000
@@ -282,12 +300,8 @@ class Mic:
                         input=True, output=True,
                         frames_per_buffer=self.CHUNK_SIZE)
 
-        headers = {'Authorization': 'Bearer ' + self.access_key,
-                   'Content-Type': 'audio/raw; encoding=signed-integer; bits=16;' +
-                                   ' rate=8000; endian=little', 'Transfer-Encoding': 'chunked'}
-        url = 'https://api.wit.ai/speech'
+        foo = requests.post(self.active_stt_engine.url, headers=self.active_stt_engine.headers, data=self.gen(p, stream))
 
-        foo = requests.post(url, headers=headers, data=self.gen(p, stream))
         self.speaker.play(jasperpath.data('audio', 'beep_lo.wav'))
 
         stream.stop_stream()
@@ -301,6 +315,7 @@ class Mic:
 
         return None
 
+    # TODO: replace with code in other mic
     # Returns if the RMS of block is less than the threshold
     def is_silent(self, block):
         count = len(block) / 2
@@ -315,6 +330,7 @@ class Mic:
         rms_value = math.sqrt(sum_squares / count)
         return rms_value, rms_value <= self.THRESHOLD
 
+    # TODO: replace with code in other mic
     # Returns as many (up to returnNum) blocks as it can.
     def returnUpTo(self, iterator, values, returnNum):
         if iterator + returnNum < len(values):
@@ -325,6 +341,7 @@ class Mic:
             temp = len(values) - iterator
             return (iterator + temp + 1, "".join(values[iterator:iterator + temp]))
 
+    # TODO: replace with code in other mic
     # Python generator- yields roughly 512k to generator.
     def gen(self, p, stream):
         num_silent = 0

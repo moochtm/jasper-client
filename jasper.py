@@ -102,6 +102,7 @@ class Jasper(object):
         tts_engine_class = tts.get_engine_by_slug(tts_engine_slug)
 
         # Initialize Mic
+        # TODO: Mic shouldn't receive TTS and STT engines - should be Conversation
         self.mic = Mic(tts_engine_class.get_instance(),
                        stt_passive_engine_class.get_passive_instance(),
                        stt_engine_class.get_active_instance())
@@ -114,6 +115,7 @@ class Jasper(object):
             salutation = "How can I be of service?"
         self.mic.say(salutation)
 
+        # TODO: should pass Conversation the TTS and STT engines, along with Mic
         conversation = Conversation("JASPER", self.mic, self.config)
         conversation.handleForever()
 
