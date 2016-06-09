@@ -89,12 +89,36 @@ def execute(executable, fst_model, input, is_file=False, nbest=None):
 
     result = {}
     if stdoutdata is not None:
+
+        ##################################################################
+        # MOOCHTM: fixing issue with different Phonetisaurus on Mac
+
+        if '}' in stdoutdata:
+            new_stdoutdata = ''
+            for line in stdoutdata.split('\n'):
+                word = ''
+                phoneme = ''
+                line = line.strip()
+                for bit in line.split(' '):
+                    print bit
+                    if '}' in bit:
+                        word += bit.split('}')[0]
+                        if bit.split('}')[1] is not '_':
+                            phoneme += bit.split('}')[1] + ' '
+                print word, phoneme
+                new_stdoutdata += word + ' ' + '0.0 ' + phoneme + '\n'
+        stdoutdata = new_stdoutdata
+
+        ##################################################################
+
         for match in RE_WORDS.finditer(stdoutdata):
+            print match
             word = match.group('word')
             pronounciation = match.group('pronounciation')
             if word not in result:
                 result[word] = []
             result[word].append(pronounciation)
+    print "RESULT: %s" % result
     return result
 
 
@@ -145,6 +169,7 @@ class PhonetisaurusG2P(object):
             tmp_fname = f.name
         output = execute(self.executable, self.fst_model, tmp_fname,
                          is_file=True, nbest=self.nbest)
+        print "OUTPUT: %s" % output
         os.remove(tmp_fname)
         return output
 
