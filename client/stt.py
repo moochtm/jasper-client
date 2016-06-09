@@ -570,7 +570,7 @@ class WitAiSTT(AbstractSTTEngine):
           access_token:    ERJKGE86SOMERANDOMTOKEN23471AB
     """
 
-    SLUG = "witai"
+    SLUG = "witai-stt"
 
     def __init__(self, access_token):
         self._logger = logging.getLogger(__name__)
