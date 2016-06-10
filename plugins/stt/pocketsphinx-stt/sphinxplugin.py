@@ -43,6 +43,8 @@ class PocketsphinxSTTPlugin(plugin.STTPlugin):
         vocabulary_path = self.compile_vocabulary(
             sphinxvocab.compile_vocabulary)
 
+        print "test pos 1"
+
         lm_path = sphinxvocab.get_languagemodel_path(vocabulary_path)
         dict_path = sphinxvocab.get_dictionary_path(vocabulary_path)
 
@@ -87,7 +89,7 @@ class PocketsphinxSTTPlugin(plugin.STTPlugin):
                                          suffix='.log', delete=False) as f:
             self._logfile = f.name
 
-        print "test pos 1"
+
 
         if self._pocketsphinx_v5:
             # Pocketsphinx v5
