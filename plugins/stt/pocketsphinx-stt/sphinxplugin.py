@@ -87,6 +87,8 @@ class PocketsphinxSTTPlugin(plugin.STTPlugin):
                                          suffix='.log', delete=False) as f:
             self._logfile = f.name
 
+        print "test pos 1"
+
         if self._pocketsphinx_v5:
             # Pocketsphinx v5
             config = pocketsphinx.Decoder.default_config()
