@@ -46,6 +46,7 @@ class PocketsphinxSTTPlugin(plugin.STTPlugin):
         lm_path = sphinxvocab.get_languagemodel_path(vocabulary_path)
         dict_path = sphinxvocab.get_dictionary_path(vocabulary_path)
 
+        print "HELLO!"
         self._logger.debug("lm_path is: " +
                            "'%s'", lm_path)
         self._logger.debug("dict_path is: " +
