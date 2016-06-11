@@ -43,10 +43,13 @@ class PocketsphinxSTTPlugin(plugin.STTPlugin):
         vocabulary_path = self.compile_vocabulary(
             sphinxvocab.compile_vocabulary)
 
-        print "test pos 1"
-
         lm_path = sphinxvocab.get_languagemodel_path(vocabulary_path)
         dict_path = sphinxvocab.get_dictionary_path(vocabulary_path)
+
+        self._logger.debug("lm_path is: " +
+                           "'%s'", lm_path)
+        self._logger.debug("dict_path is: " +
+                           "'%s'", dict_path)
 
         try:
             hmm_dir = self.profile['pocketsphinx']['hmm_dir']
