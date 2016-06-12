@@ -1,0 +1,6 @@
+[Plugin]
+Name = nuance-stt
+Version = 1.0.0
+License = MIT
+URL = http://jasperproject.github.io/
+Description = Speech-To-Text implementation which relies on the Nuance Speech API.

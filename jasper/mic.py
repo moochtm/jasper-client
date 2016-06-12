@@ -215,6 +215,7 @@ class Mic(object):
 
     def say(self, phrase):
         altered_phrase = alteration.clean(phrase)
+        self._logger.info('Saying, "%s"' % altered_phrase)
         with tempfile.SpooledTemporaryFile() as f:
             f.write(self.tts_engine.say(altered_phrase))
             f.seek(0)
