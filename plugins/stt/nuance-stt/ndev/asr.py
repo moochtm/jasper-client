@@ -3,7 +3,7 @@
 
 import os, sys, wave, requests, time
 from sys import stdout
-from core import NDEVRequest, NDEVResponse, _get_language_input, red, green
+from core import NDEVRequest, NDEVResponse, _get_language_input
 from time import sleep
 
 class ASR(object):
@@ -357,7 +357,7 @@ class ASR(object):
 			sleep(ASR.send_chunk_delay)
 			yield data
 			data = file_to_play.readframes(ASR.chunk_size)
-		stdout.write("\n\n")
+		stdout.write("\n")
 		
 	"""
 	generator file that will stream any given file. 
@@ -396,13 +396,8 @@ class ASR(object):
 		if analyze_function is None:
 			print "Don't know how to stream this file... %s" % filename
 			sys.exit(-1)
-			
-		result = aReq.analyze(analyze_function)
 
-		if result.was_successful():
-			print green("✓ ASR",bold=True)
-		else:
-			print red("× ASR",bold=True)
+		result = aReq.analyze(analyze_function)
 
 		return aReq
 	
@@ -476,7 +471,7 @@ class ChunkedASRRequest(NDEVRequest):
 
 	def load_file(self, filename):
 		self.filename = filename
-		self.audio_type = ASR.get_audio_type(filename)
+		self.audio_type = 'wav' # ASR.get_audio_type(filename)
 		if self.audio_type == 'wav':
 			file_to_play = wave.open(filename, 'rb')
 			self.sample_width = file_to_play.getsampwidth()
@@ -501,9 +496,10 @@ class ChunkedASRRequest(NDEVRequest):
 	def analyze(self, readstream):
 		hdrs = self.get_headers()
 		url = self.build_url()
+		'''
 		print "* analyzing audio stream..."
 		print ""
-		print "  Request URL         %s%s" % (self.url,self.path)
+		print "  Request URL         %s" % (self.url)
 		print ""
 		print "  Request Params"
 		print "  ---------------"
@@ -526,8 +522,9 @@ class ChunkedASRRequest(NDEVRequest):
 		print "  Num Channels        %d" % self.nchannels
 		print "  Bit Rate            %d" % self.bit_rate
 		print " "
+		'''
 		res = requests.post(url, data=readstream(self.filename), headers=hdrs)
-		print "* analyzed stream.\n"
+		# print "* analyzed stream.\n"
 		self.response = ASRResponse(res)
 		return self.response
 
