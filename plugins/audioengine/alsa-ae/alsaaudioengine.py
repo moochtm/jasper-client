@@ -99,10 +99,12 @@ class AlsaAudioDevice(plugin.audioengine.AudioDevice):
             self._logger.critical(msg)
             raise Exception(msg)
         # Everything looks fine, open the PCM stream
+	print self._name
+	print "opening stream on %s" %self._name
         pcm_type = alsaaudio.PCM_PLAYBACK if output else alsaaudio.PCM_CAPTURE
         stream = alsaaudio.PCM(type=pcm_type,
                                mode=alsaaudio.PCM_NORMAL,
-                               device='default')
+                               device=self._name)
         stream.setchannels(channels)
         stream.setrate(rate)
         stream.setformat(bits_to_samplefmt(bits))

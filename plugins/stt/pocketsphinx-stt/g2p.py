@@ -21,7 +21,9 @@ def execute(executable, fst_model, input, is_file=False, nbest=None):
     #####################################################################
     # MOOCHTM
 
-    cmd = executable
+    cmd = [executable]
+    cmd.append('--help')
+    cmd = [str(x) for x in cmd]
 
     try:
         # FIXME: We can't just use subprocess.call and redirect stdout
@@ -37,10 +39,12 @@ def execute(executable, fst_model, input, is_file=False, nbest=None):
         raise
 
     if "--testset" in stdoutdata:
+        logger.debug('Found newer version of Phonetisaurus')
         cmd = ['phonetisaurus-g2p',
                '--model=%s' % fst_model,
                '--testset=%s' % input]
     else:
+        logger.debug('Found older version of Phonetisaurus')
         cmd = ['phonetisaurus-g2p',
                '--model=%s' % fst_model,
                '--input=%s' % input,
@@ -55,6 +59,7 @@ def execute(executable, fst_model, input, is_file=False, nbest=None):
         cmd.extend(['--nbest=%d' % nbest])
 
     cmd = [str(x) for x in cmd]
+
     try:
         # FIXME: We can't just use subprocess.call and redirect stdout
         # and stderr, because it looks like Phonetisaurus can't open
@@ -107,7 +112,7 @@ def execute(executable, fst_model, input, is_file=False, nbest=None):
                             phoneme += bit.split('}')[1] + ' '
                 print word, phoneme
                 new_stdoutdata += word + ' ' + '0.0 ' + phoneme + '\n'
-        stdoutdata = new_stdoutdata
+            stdoutdata = new_stdoutdata
 
         ##################################################################
 
