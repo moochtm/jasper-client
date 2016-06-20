@@ -1,0 +1,20 @@
+# Jasper Sonos Plugin
+# Copyright (C) 2015 Matt Barr
+# This file is distributed under the same license as the Jasper package.
+#
+
+# TODO: sonos plugin: create speech strings if necessary
+
+#: clock.py:9 clock.py:35
+msgid "TIME"
+msgstr ""
+
+#: clock.py:23
+#, python-format
+msgid "It is {t:%l} {t:%P} right now."
+msgstr ""
+
+#: clock.py:25
+#, python-format
+msgid "It is {t:%l}:{t.minute} {t:%P} right now."
+msgstr ""

@@ -1,0 +1,20 @@
+artist:
+  - MusicalArtist
+  - MusicGroup
+album:
+  - MusicAlbum
+composer:
+genre:
+  - MusicGenre
+playlist:
+station:
+track:
+  - MusicalWork
+  - MusicRecording
+
+
+
+
+
+
+

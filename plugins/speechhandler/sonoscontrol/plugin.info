@@ -1,0 +1,10 @@
+[Plugin]
+Name = sonos_contol
+Version = 1.0.0
+License = MIT
+URL = http://jasperproject.github.io/
+Description = What's the meaning of Life?
+
+[Author]
+Name = Matt Barr
+URL = https://github.com/moochtm/

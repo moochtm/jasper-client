@@ -1,0 +1,26 @@
+artist:
+  - /music/artist
+  - /music/conducted_ensemble
+  - /music/conductor
+  - /music/orchestra
+  - /music/songwriter
+  - /organization/organization
+  - /people/person
+  - /broadcast/artist
+  - /music/producer
+album:
+  - /music/album
+  - /music/soundtrack
+composer:
+  - /music/composer
+genre:
+  - /music/genre
+playlist:
+station:
+  - /broadcast/radio_station
+track:
+  - /music/arrangement
+  - /music/composition
+  - /music/concert
+  - /music/single
+  - /music/track

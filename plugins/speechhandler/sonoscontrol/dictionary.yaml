@@ -1,0 +1,65 @@
+action:
+    play:
+        - start
+        - play
+    pause:
+        - pause
+        - stop
+    find:
+        - find
+    list:
+        - list
+    set:
+        - set
+        - turn
+    search:
+        - search
+target:
+    up:
+        - up
+    down:
+        - down
+    current:
+        - current
+    next:
+        - next
+    previous:
+        - previous
+    last:
+        - last
+    first:
+        - first
+    'on':
+        - 'on'
+    'off':
+        - 'off'
+entity_pointer:
+    track:
+        - track
+        - tracks
+        - episode
+    album:
+        - on the album
+        - from the album
+        - the albums
+        - albums
+        - the album
+        - album
+    artist:
+        - by the artist called
+        - by the artist
+        - artists
+        - artist
+        - by
+    station:
+        - radio station
+        - station
+    queue:
+        - queue
+entity:
+    speakers:
+        - speakers
+        - speaker
+property:
+    volume:
+        - volume
